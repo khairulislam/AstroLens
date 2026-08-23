@@ -266,7 +266,8 @@ class GCNN(nn.Module):
         self.pools = nn.ModuleList([p if p is not None else nn.Identity() for p in pools])
 
         self.gpool = GroupPooling(self.group, feature_fields[-1])
-        self.head = nn.Linear(feature_fields[-1], num_classes)
+        # timm convention: num_classes=0 drops the head, forward() then returns pooled features.
+        self.head = nn.Linear(feature_fields[-1], num_classes) if num_classes > 0 else nn.Identity()
 
     def forward_features(self, x: torch.Tensor) -> torch.Tensor:
         """Regular-representation features before invariant group pooling."""

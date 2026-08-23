@@ -109,7 +109,10 @@ class Linformer(nn.Module):
         self.blocks = nn.ModuleList(
             [TransformerBlock(dim, seq_len, k, heads, dropout) for _ in range(depth)]
         )
-        self.head = nn.Sequential(nn.LayerNorm(dim), nn.Linear(dim, num_classes))
+        # timm convention: num_classes=0 drops the head, forward() then returns pooled features.
+        self.head = (
+            nn.Sequential(nn.LayerNorm(dim), nn.Linear(dim, num_classes)) if num_classes > 0 else nn.Identity()
+        )
 
     def forward(self, img: torch.Tensor) -> torch.Tensor:
         b, c, h, w = img.shape

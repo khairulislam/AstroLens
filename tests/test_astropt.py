@@ -8,7 +8,7 @@ PATCH_SIZE = 8
 NUM_PATCHES = (IMG_SIZE // PATCH_SIZE) ** 2
 
 
-def _tiny_model(num_classes=None):
+def _tiny_model(num_classes=0):
     torch.manual_seed(0)
     model = AstroPT(
         img_size=IMG_SIZE,

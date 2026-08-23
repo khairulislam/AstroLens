@@ -16,7 +16,7 @@ A unified library of vision models for astronomy.
 ## Usage
 
 ```bash
-pip install -r requirements.txt
+pip install -e .
 ```
 
 ```python

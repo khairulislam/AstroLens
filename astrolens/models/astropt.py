@@ -112,9 +112,9 @@ class AstroPT(nn.Module):
 
     https://arxiv.org/abs/2405.14930
 
-    `forward` returns classification logits when `num_classes` is set,
-    otherwise the predicted next patch at every sequence position (the
-    pretraining objective). `forward_features` always returns the causal
+    `forward` returns classification logits when `num_classes > 0` (timm
+    convention), otherwise the predicted next patch at every sequence position
+    (the pretraining objective). `forward_features` always returns the causal
     per-patch embeddings, for use as a pretrained backbone.
     """
 
@@ -122,7 +122,7 @@ class AstroPT(nn.Module):
         self,
         img_size: Union[int, Tuple[int, int]] = 224,
         in_chans: int = 3,
-        num_classes: Optional[int] = None,
+        num_classes: int = 0,
         patch_size: int = 16,
         dim: int = 384,
         depth: int = 8,
@@ -158,7 +158,7 @@ class AstroPT(nn.Module):
         self.decoder = nn.Linear(dim, self.patch_dim, bias=bias)
 
         self.head = None
-        if num_classes is not None:
+        if num_classes > 0:
             self.head = nn.Sequential(nn.LayerNorm(dim), nn.Linear(dim, num_classes))
 
     def patchify(self, img: torch.Tensor) -> torch.Tensor:
