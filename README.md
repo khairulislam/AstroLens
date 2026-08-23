@@ -76,6 +76,8 @@ model = astrolens.create_model("linformer", num_classes=8)
 
 ## GCNN
 
+<img src="images/gcnn.png" alt="Two (unvectorized) basis kernels" width="800">
+
 This [paper](https://arxiv.org/abs/2311.01500) builds group-equivariant CNNs for galaxy morphology classification that stay robust under image rotations and, optionally, reflections. Features are represented in the regular representation of a discrete rotation group `C_N` (or dihedral group `D_N` with reflections), and pooled to an invariant representation before classification. This module reimplements the group convolution natively in PyTorch (kernel rotation via bilinear interpolation, exact for `N` in `{1, 2, 4}`) rather than depending on the reference implementation's [`escnn`](https://github.com/QUVA-Lab/escnn) library. Trained on [Galaxy10 DECals](https://github.com/henrysky/Galaxy10).
 
 ```python
@@ -96,6 +98,8 @@ model = astrolens.create_model("gcnn_d16", num_classes=10)
 ```
 
 ## AstroPT
+
+<img src="images/astropt.png" alt="AstroPT patchifying process" width="250">
 
 This [paper](https://arxiv.org/abs/2405.14930) adapts a GPT-style causal transformer to galaxy images, autoregressively predicting each image patch from the ones before it to learn a general-purpose pretrained backbone, following [nanoGPT](https://github.com/karpathy/nanoGPT). Trained on the [Galaxies dataset](https://huggingface.co/datasets/Smith42/galaxies) of DESI Legacy Survey imagery.
 
