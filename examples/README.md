@@ -29,7 +29,17 @@ running `gz10_gcnn_training.ipynb` first.
 
 ## `gz10_astropt_pretraining.ipynb`
 
-Self-supervised pretraining of `astropt` on `UniverseTBD/mmu_gz10` images
-with the autoregressive next-patch objective, then a LoRA finetune (a
-classification head plus low-rank attention adapters, backbone otherwise
-frozen) evaluated on the same 70/10/20 split used by the other notebooks.
+Self-supervised pretraining of `astropt` from scratch on `UniverseTBD/mmu_gz10`
+images with the autoregressive next-patch objective. Saves a checkpoint, but
+mainly demonstrates the mechanism — see `gz10_astropt_finetuning.ipynb` for a
+downstream task built on a real pretrained model.
+
+## `gz10_astropt_finetuning.ipynb`
+
+Downloads a released pretrained checkpoint from
+[`Smith42/astroPT`](https://huggingface.co/Smith42/astroPT), maps its weights
+onto `astropt`'s causal transformer body (attention, MLP, layer norms,
+position embeddings — see `load_pretrained_backbone` in the notebook for the
+exact key mapping), then LoRA-finetunes a classification head on
+`UniverseTBD/mmu_gz10`, evaluated on the same 70/10/20 split used by the
+other notebooks.

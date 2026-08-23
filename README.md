@@ -134,8 +134,11 @@ See [`examples/README.md`](examples/README.md) for full details.
   probes the trained GCNN with a one-pixel adversarial attack and a
   latent-space visualization of its learned embeddings.
 - [`examples/gz10_astropt_pretraining.ipynb`](examples/gz10_astropt_pretraining.ipynb):
-  pretrains `AstroPT` with the autoregressive next-patch objective, then
-  LoRA-finetunes a classification head on the frozen backbone.
+  pretrains `AstroPT` from scratch with the autoregressive next-patch
+  objective.
+- [`examples/gz10_astropt_finetuning.ipynb`](examples/gz10_astropt_finetuning.ipynb):
+  loads a released `Smith42/astroPT` checkpoint and LoRA-finetunes a
+  classification head on it.
 
 ## Resources
 
