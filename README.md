@@ -8,6 +8,7 @@ A unified library of vision models for astronomy.
 - [Astroformer](#astroformer)
 - [Linformer](#linformer)
 - [GCNN](#gcnn)
+- [AstroPT](#astropt)
 - [Examples](#examples)
 - [Resources](#resources)
 - [Citations](#citations)
@@ -94,6 +95,27 @@ import astrolens
 model = astrolens.create_model("gcnn_d16", num_classes=10)
 ```
 
+## AstroPT
+
+This [paper](https://arxiv.org/abs/2405.14930) adapts a GPT-style causal transformer to galaxy images, autoregressively predicting each image patch from the ones before it to learn a general-purpose pretrained backbone, following [nanoGPT](https://github.com/karpathy/nanoGPT). Trained on the [Galaxies dataset](https://huggingface.co/datasets/Smith42/galaxies) of DESI Legacy Survey imagery.
+
+```python
+import torch
+from astrolens.models.astropt import AstroPT
+
+model = AstroPT(img_size=224, in_chans=3, patch_size=16, num_classes=10)
+img = torch.randn(2, 3, 224, 224)
+logits = model(img)
+```
+
+Or through the registry:
+
+```python
+import astrolens
+
+model = astrolens.create_model("astropt", num_classes=10)
+```
+
 ## Examples
 
 See [`examples/README.md`](examples/README.md) for full details.
@@ -138,6 +160,13 @@ See [`examples/README.md`](examples/README.md) for full details.
   eprint={2311.01500},
   archivePrefix={arXiv},
   primaryClass={astro-ph.GA}
+}
+
+@article{smith2024astropt,
+  title={AstroPT: Scaling Large Observation Models for Astronomy},
+  author={Smith, Michael J. and others},
+  journal={arXiv preprint arXiv:2405.14930},
+  year={2024}
 }
 
 ```
