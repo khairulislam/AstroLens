@@ -96,14 +96,23 @@ model = astrolens.create_model("gcnn_d16", num_classes=10)
 
 ## Examples
 
+See [`examples/README.md`](examples/README.md) for full details.
+
 - [`examples/gz10_linformer_training.ipynb`](examples/gz10_linformer_training.ipynb):
-  trains `Linformer` on [`UniverseTBD/mmu_gz10`](https://huggingface.co/datasets/UniverseTBD/mmu_gz10)
-  (Galaxy10 DECals, 17,736 galaxies, 10 discrete classes), split 70/10/20
-  train/val/test. Points to the paper authors' repository for full-scale,
-  paper-accurate Galaxy Zoo 2 reproduction. Example-only dependencies are
-  listed separately in [`examples/requirements.txt`](examples/requirements.txt).
+  trains `Linformer` for Galaxy Zoo 10 morphology classification on
+  [`UniverseTBD/mmu_gz10`](https://huggingface.co/datasets/UniverseTBD/mmu_gz10).
+- [`examples/gz10_gcnn_training.ipynb`](examples/gz10_gcnn_training.ipynb):
+  trains the group-equivariant `gcnn_d4` on the same dataset and saves a
+  checkpoint for `gz10_gcnn_analysis.ipynb`.
+- [`examples/gz10_gcnn_analysis.ipynb`](examples/gz10_gcnn_analysis.ipynb):
+  probes the trained GCNN with a one-pixel adversarial attack and a
+  latent-space visualization of its learned embeddings.
 
 ## Resources
+
+* [pytorch-image-models](https://github.com/huggingface/pytorch-image-models): The largest collection of PyTorch image encoders / backbones.
+* [DeepLense](https://github.com/ML4SCI/DeepLense/tree/main): Explores cutting-edge Machine Learning techniques for the study of Strong Gravitational Lensing and Dark Matter Sub-structure, using both simulated and real lensing images.
+* [lucidrains/vit-pytorch](https://github.com/lucidrains/vit-pytorch): Implementation of Vision Transformer, a simple way to achieve SOTA in vision.
 
 ## Citations
 
