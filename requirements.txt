@@ -1,2 +1,5 @@
+datasets
+scikit-learn
 torch
 timm
+torchvision

@@ -7,6 +7,8 @@ A unified library of vision models for astronomy.
 - [Usage](#usage)
 - [Astroformer](#astroformer)
 - [Linformer](#linformer)
+- [GCNN](#gcnn)
+- [Examples](#examples)
 - [Resources](#resources)
 - [Citations](#citations)
 
@@ -71,6 +73,36 @@ import astrolens
 model = astrolens.create_model("linformer", num_classes=8)
 ```
 
+## GCNN
+
+This [paper](https://arxiv.org/abs/2311.01500) builds group-equivariant CNNs for galaxy morphology classification that stay robust under image rotations and, optionally, reflections. Features are represented in the regular representation of a discrete rotation group `C_N` (or dihedral group `D_N` with reflections), and pooled to an invariant representation before classification. This module reimplements the group convolution natively in PyTorch (kernel rotation via bilinear interpolation, exact for `N` in `{1, 2, 4}`) rather than depending on the reference implementation's [`escnn`](https://github.com/QUVA-Lab/escnn) library. Trained on [Galaxy10 DECals](https://github.com/henrysky/Galaxy10).
+
+```python
+import torch
+from astrolens.models.gcnn import GCNN
+
+model = GCNN(N=8, reflections=True, img_size=255, num_classes=10)
+img = torch.randn(2, 3, 255, 255)
+logits = model(img)
+```
+
+Or through the registry, with named factories for each group (`gcnn_c1`...`gcnn_c16`, `gcnn_d1`...`gcnn_d16`):
+
+```python
+import astrolens
+
+model = astrolens.create_model("gcnn_d16", num_classes=10)
+```
+
+## Examples
+
+- [`examples/gz10_linformer_training.ipynb`](examples/gz10_linformer_training.ipynb):
+  trains `Linformer` on [`UniverseTBD/mmu_gz10`](https://huggingface.co/datasets/UniverseTBD/mmu_gz10)
+  (Galaxy10 DECals, 17,736 galaxies, 10 discrete classes), split 70/10/20
+  train/val/test. Points to the paper authors' repository for full-scale,
+  paper-accurate Galaxy Zoo 2 reproduction. Example-only dependencies are
+  listed separately in [`examples/requirements.txt`](examples/requirements.txt).
+
 ## Resources
 
 ## Citations
@@ -88,6 +120,15 @@ model = astrolens.create_model("linformer", num_classes=8)
   author={Lin, Joshua Yao-Yu and Liao, Song-Mao and Huang, Hung-Jin and Kuo, Wei-Ting and Ou, Olivia Hsuan-Min},
   journal={arXiv preprint arXiv:2110.01024},
   year={2021}
+}
+
+@misc{pandya2023e2,
+  title={E(2) Equivariant Neural Networks for Robust Galaxy Morphology Classification},
+  author={Sneh Pandya and Purvik Patel and Franc O and Jonathan Blazek},
+  year={2023},
+  eprint={2311.01500},
+  archivePrefix={arXiv},
+  primaryClass={astro-ph.GA}
 }
 
 ```
