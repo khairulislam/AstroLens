@@ -1,5 +1,7 @@
-datasets
-scikit-learn
+## currently needed in examples only
+# datasets
+# scikit-learn
+# torchvision
+
 torch
 timm
-torchvision

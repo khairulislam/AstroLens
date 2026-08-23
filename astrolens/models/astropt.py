@@ -9,8 +9,11 @@ downstream tasks either through the causal embeddings (`forward_features`) or
 through an optional classification head trained on top of them.
 
 This reimplements the single-modality, native-backbone path of the reference
-code (https://github.com/Smith42/astropt); the multimodal registry, LoRA, LLM
-backbone, AION tokeniser, and masked-autoencoder objective are out of scope.
+code (https://github.com/Smith42/astropt), including LoRA finetuning of the
+attention projections (Hu et al., 2021, https://arxiv.org/abs/2106.09685) as
+a hand-rolled adapter rather than the `loralib` dependency the reference uses.
+The multimodal registry, LLM backbone, AION tokeniser, and masked-autoencoder
+objective are out of scope.
 """
 
 from typing import Optional, Tuple, Union
@@ -23,7 +26,14 @@ from ..registry import register_model
 
 
 class CausalSelfAttention(nn.Module):
-    def __init__(self, dim: int, heads: int, dropout: float, bias: bool):
+    """Causal self-attention with an optional LoRA adapter on the qkv projection.
+
+    With `lora_r > 0`, `qkv` stays frozen (see `AstroPT.mark_only_lora_as_trainable`)
+    and a trainable low-rank update `(x @ A^T @ B^T) * alpha/r` is added on top,
+    following the reference model's `finetune.py` recipe.
+    """
+
+    def __init__(self, dim: int, heads: int, dropout: float, bias: bool, lora_r: int = 0, lora_alpha: Optional[float] = None):
         super().__init__()
         assert dim % heads == 0, "dim must be divisible by heads"
         self.heads = heads
@@ -31,9 +41,19 @@ class CausalSelfAttention(nn.Module):
         self.qkv = nn.Linear(dim, 3 * dim, bias=bias)
         self.proj = nn.Linear(dim, dim, bias=bias)
 
+        self.lora_r = lora_r
+        if lora_r > 0:
+            self.lora_scaling = (lora_alpha if lora_alpha is not None else lora_r) / lora_r
+            self.lora_A = nn.Parameter(torch.empty(lora_r, dim))
+            self.lora_B = nn.Parameter(torch.zeros(3 * dim, lora_r))
+            nn.init.kaiming_uniform_(self.lora_A, a=5**0.5)
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         b, n, c = x.shape
-        q, k, v = self.qkv(x).split(c, dim=2)
+        qkv = self.qkv(x)
+        if self.lora_r > 0:
+            qkv = qkv + (x @ self.lora_A.T @ self.lora_B.T) * self.lora_scaling
+        q, k, v = qkv.split(c, dim=2)
         q = q.view(b, n, self.heads, c // self.heads).transpose(1, 2)
         k = k.view(b, n, self.heads, c // self.heads).transpose(1, 2)
         v = v.view(b, n, self.heads, c // self.heads).transpose(1, 2)
@@ -45,10 +65,10 @@ class CausalSelfAttention(nn.Module):
 
 
 class Block(nn.Module):
-    def __init__(self, dim: int, heads: int, dropout: float, bias: bool):
+    def __init__(self, dim: int, heads: int, dropout: float, bias: bool, lora_r: int = 0, lora_alpha: Optional[float] = None):
         super().__init__()
         self.ln_1 = nn.LayerNorm(dim, bias=bias)
-        self.attn = CausalSelfAttention(dim, heads, dropout, bias)
+        self.attn = CausalSelfAttention(dim, heads, dropout, bias, lora_r, lora_alpha)
         self.ln_2 = nn.LayerNorm(dim, bias=bias)
         self.mlp = nn.Sequential(
             nn.Linear(dim, 4 * dim, bias=bias),
@@ -110,6 +130,8 @@ class AstroPT(nn.Module):
         dropout: float = 0.0,
         bias: bool = False,
         spiral: bool = False,
+        lora_r: int = 0,
+        lora_alpha: Optional[float] = None,
     ):
         super().__init__()
         img_h, img_w = (img_size, img_size) if isinstance(img_size, int) else img_size
@@ -129,7 +151,9 @@ class AstroPT(nn.Module):
         self.encoder = nn.Linear(self.patch_dim, dim, bias=bias)
         self.pos_embed = nn.Embedding(num_patches, dim)
         self.drop = nn.Dropout(dropout)
-        self.blocks = nn.ModuleList([Block(dim, heads, dropout, bias) for _ in range(depth)])
+        self.blocks = nn.ModuleList(
+            [Block(dim, heads, dropout, bias, lora_r, lora_alpha) for _ in range(depth)]
+        )
         self.ln_f = nn.LayerNorm(dim, bias=bias)
         self.decoder = nn.Linear(dim, self.patch_dim, bias=bias)
 
@@ -177,6 +201,16 @@ class AstroPT(nn.Module):
         patches = self.patchify(img)
         pred = self.forward(img)
         return F.huber_loss(pred[:, :-1], patches[:, 1:])
+
+    def mark_only_lora_as_trainable(self) -> None:
+        """Freeze everything except LoRA adapters and the task head, for finetuning.
+
+        Mirrors the reference model's `finetune.py` recipe
+        (`lora.mark_only_lora_as_trainable(model)` plus an unfrozen task head).
+        Requires the model to have been constructed with `lora_r > 0`.
+        """
+        for name, param in self.named_parameters():
+            param.requires_grad = "lora_" in name or name.startswith("head.")
 
 
 @register_model

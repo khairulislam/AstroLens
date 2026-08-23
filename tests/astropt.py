@@ -95,6 +95,39 @@ def test_draw_from_centre_differs_from_final_layer():
     assert not torch.allclose(final, centre)
 
 
+def test_lora_finetuning_freezes_base_weights():
+    base = _tiny_model()
+    x = torch.randn(2, 3, IMG_SIZE, IMG_SIZE)
+    with torch.no_grad():
+        base_out = base.forward_features(x)
+
+    lora_model = AstroPT(
+        img_size=IMG_SIZE, patch_size=PATCH_SIZE, dim=16, depth=2, heads=2,
+        num_classes=5, lora_r=4,
+    )
+    lora_model.load_state_dict(base.state_dict(), strict=False)
+    lora_model.mark_only_lora_as_trainable()
+
+    trainable = {n for n, p in lora_model.named_parameters() if p.requires_grad}
+    assert all("lora_" in n or n.startswith("head.") for n in trainable)
+    assert any("lora_" in n for n in trainable)
+    assert any(n.startswith("head.") for n in trainable)
+
+    # lora_B is zero-initialized, so the LoRA delta starts at zero and the
+    # loaded base weights reproduce the pretrained model's embeddings exactly
+    with torch.no_grad():
+        lora_out = lora_model.forward_features(x)
+    torch.testing.assert_close(base_out, lora_out)
+
+    logits = lora_model(x)
+    logits.sum().backward()
+    for name, param in lora_model.named_parameters():
+        if param.requires_grad:
+            assert param.grad is not None
+        else:
+            assert param.grad is None
+
+
 def test_state_dict_save_load(tmp_path):
     model = _tiny_model(num_classes=5)
     path = tmp_path / "astropt.pt"

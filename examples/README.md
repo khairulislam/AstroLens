@@ -1,7 +1,7 @@
 # Examples
 
 Optional, self-contained notebooks. Each installs its own extra dependencies
-in its first cell — none of this is required to use `astrolens` itself.
+in its first cell, none of this is required to use `astrolens` itself.
 
 ## `gz10_linformer_training.ipynb`
 
@@ -26,3 +26,10 @@ a one-pixel adversarial attack (differential evolution) and a t-SNE
 projection of the model's invariant embedding, adapted from the reference
 implementation's `onepixelattack.py` and `latent_space_analysis.py`. Requires
 running `gz10_gcnn_training.ipynb` first.
+
+## `gz10_astropt_pretraining.ipynb`
+
+Self-supervised pretraining of `astropt` on `UniverseTBD/mmu_gz10` images
+with the autoregressive next-patch objective, then a LoRA finetune (a
+classification head plus low-rank attention adapters, backbone otherwise
+frozen) evaluated on the same 70/10/20 split used by the other notebooks.
