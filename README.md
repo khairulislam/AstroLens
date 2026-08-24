@@ -124,21 +124,27 @@ model = astrolens.create_model("astropt", num_classes=10)
 
 See [`examples/README.md`](examples/README.md) for full details.
 
-- [`examples/gz10_linformer_training.ipynb`](examples/gz10_linformer_training.ipynb):
+- [`examples/linformer_training.ipynb`](examples/linformer_training.ipynb):
   trains `Linformer` for Galaxy Zoo 10 morphology classification on
   [`UniverseTBD/mmu_gz10`](https://huggingface.co/datasets/UniverseTBD/mmu_gz10).
-- [`examples/gz10_gcnn_training.ipynb`](examples/gz10_gcnn_training.ipynb):
+- [`examples/gcnn_training.ipynb`](examples/gcnn_training.ipynb):
   trains the group-equivariant `gcnn_d4` on the same dataset and saves a
-  checkpoint for `gz10_gcnn_analysis.ipynb`.
-- [`examples/gz10_gcnn_analysis.ipynb`](examples/gz10_gcnn_analysis.ipynb):
+  checkpoint for `gcnn_analysis.ipynb`.
+- [`examples/gcnn_analysis.ipynb`](examples/gcnn_analysis.ipynb):
   probes the trained GCNN with a one-pixel adversarial attack and a
   latent-space visualization of its learned embeddings.
-- [`examples/gz10_astropt_pretraining.ipynb`](examples/gz10_astropt_pretraining.ipynb):
+- [`examples/astropt_pretraining.ipynb`](examples/astropt_pretraining.ipynb):
   pretrains `AstroPT` from scratch with the autoregressive next-patch
-  objective.
-- [`examples/gz10_astropt_finetuning.ipynb`](examples/gz10_astropt_finetuning.ipynb):
+  objective on [`Smith42/galaxies`](https://huggingface.co/datasets/Smith42/galaxies).
+- [`examples/astropt_finetuning.ipynb`](examples/astropt_finetuning.ipynb):
   loads a released `Smith42/astroPT` checkpoint and LoRA-finetunes a
-  classification head on it.
+  classification head on `UniverseTBD/mmu_gz10`.
+- [`examples/astropt_similarity_search.ipynb`](examples/astropt_similarity_search.ipynb):
+  uses the same checkpoint as a frozen feature extractor for cosine-similarity
+  nearest-neighbor retrieval on `Smith42/galaxies`.
+- [`examples/astropt_anomaly_detection.ipynb`](examples/astropt_anomaly_detection.ipynb):
+  uses the same frozen embeddings for outlier detection (Local Outlier Factor)
+  on `Smith42/galaxies`.
 
 ## Resources
 
