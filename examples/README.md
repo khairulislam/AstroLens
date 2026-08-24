@@ -43,7 +43,8 @@ Downloads a released pretrained checkpoint from
 [`Smith42/astroPT`](https://huggingface.co/Smith42/astroPT), maps its weights
 onto `astropt`'s causal transformer body (attention, MLP, layer norms,
 position embeddings — see `load_pretrained_astropt`/`load_pretrained_backbone`
-in `utils/astropt.py` for the exact key mapping), then LoRA-finetunes a
+in `astrolens/pretrained/astropt.py`, re-exported from `utils/astropt.py`,
+for the exact key mapping), then LoRA-finetunes a
 classification head on `UniverseTBD/mmu_gz10`, evaluated on the same
 70/10/20 split used by the other GZ10 notebooks.
 

@@ -60,7 +60,10 @@ def test_causal_embedding_does_not_see_future_patches():
     model = _tiny_model()
     x = torch.randn(1, 3, IMG_SIZE, IMG_SIZE)
     x_perturbed = x.clone()
-    x_perturbed[:, :, -PATCH_SIZE:, -PATCH_SIZE:] += 10.0  # perturb the last patch only
+    # `patchify` z-score normalizes each patch independently, which is invariant
+    # to `patch -> a*patch + b`, so a uniform offset (e.g. `+= 10.0`) would be a
+    # no-op here; replace the last patch with fresh noise instead.
+    x_perturbed[:, :, -PATCH_SIZE:, -PATCH_SIZE:] = torch.randn(1, 3, PATCH_SIZE, PATCH_SIZE)
 
     with torch.no_grad():
         f0 = model.forward_features(x)
@@ -109,7 +112,10 @@ def test_lora_finetuning_freezes_base_weights():
     lora_model.mark_only_lora_as_trainable()
 
     trainable = {n for n, p in lora_model.named_parameters() if p.requires_grad}
-    assert all("lora_" in n or n.startswith("head.") for n in trainable)
+    # `encoder.` also stays trainable by design (see mark_only_lora_as_trainable's
+    # docstring): it can't be loaded from the reference checkpoint, so it starts
+    # randomly initialized and must be learned during finetuning too.
+    assert all("lora_" in n or n.startswith("head.") or n.startswith("encoder.") for n in trainable)
     assert any("lora_" in n for n in trainable)
     assert any(n.startswith("head.") for n in trainable)
 

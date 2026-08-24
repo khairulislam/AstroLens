@@ -120,6 +120,26 @@ import astrolens
 model = astrolens.create_model("astropt", num_classes=10)
 ```
 
+## Pretrained weights
+
+`astrolens.pretrained` loads released checkpoints into the matching model,
+with the optional `huggingface_hub` dependency (`pip install astrolens[pretrained]`).
+
+| Model | Source | License | Checksum (sha256) |
+|---|---|---|---|
+| AstroPT | [`Smith42/astroPT`](https://huggingface.co/Smith42/astroPT), `models/fully_trained/0089M_params/030000_ckpt.pt` | MIT | `3b4450ee8b3ca94ad7b9d632e7998a044f6bbe1548d3ef9cbb2802cd93ad972c` |
+
+```python
+import torch
+from astrolens.pretrained.astropt import load_pretrained_astropt
+
+model = load_pretrained_astropt(img_size=224, device=torch.device("cpu"), num_classes=10)
+```
+
+Only the causal transformer body transfers; see
+[`astrolens/pretrained/astropt.py`](astrolens/pretrained/astropt.py) for the
+exact key mapping and why the patch encoder/decoder are excluded.
+
 ## Examples
 
 See [`examples/README.md`](examples/README.md) for full details.

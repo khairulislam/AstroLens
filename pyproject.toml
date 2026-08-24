@@ -15,6 +15,9 @@ dependencies = [
     "timm",
 ]
 
+[project.optional-dependencies]
+pretrained = ["huggingface_hub"]
+
 [project.urls]
 Homepage = "https://github.com/khairulislam/AstroLens"
 
