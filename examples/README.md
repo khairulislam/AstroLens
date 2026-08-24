@@ -90,3 +90,20 @@ query region; see `utils/lsdb_legacysurvey.py` for two remote-read
 workarounds this environment needed (a dask scheduler bug and a
 partition-column read that has to happen locally after download rather
 than through lsdb's own remote reader).
+
+## `astroclip_similarity_search.ipynb`
+
+Loads the released `polymathic-ai/astroclip` checkpoint via
+`astrolens.pretrained.astroclip.load_pretrained_astroclip` (a thin wrapper
+around the `astroclip` package — its 302M-parameter DINOv2 image encoder is
+too large and dependency-heavy to reimplement natively, see
+`astrolens/pretrained/astroclip.py`) and extracts frozen **image** embeddings
+only. Cutout coordinates come from `UniverseTBD/mmu_gz10`, but the model
+input is real 3-band (g,r,z) Legacy Survey flux fetched per-coordinate from
+`legacysurvey.org/viewer/cutout.fits` and run through `decals_to_rgb` (the
+exact preprocessing AstroCLIP's own README gives for cutouts outside its
+premade dataset), not gz10's RGB thumbnails. AstroCLIP's own cross-modal
+(image/spectrum) retrieval and other downstream tasks need a held-out
+dataset that is a ~60 GB download; this notebook sidesteps that and instead
+ranks by in-modal (image-to-image) cosine similarity to a query galaxy, same
+layout as `astropt_similarity_search.ipynb` and `aion_embeddings.ipynb`.

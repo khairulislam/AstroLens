@@ -154,6 +154,25 @@ model, codec_manager = load_pretrained_aion("aion-base", device="cpu")
 See [`astrolens/pretrained/aion.py`](astrolens/pretrained/aion.py) and
 [`examples/aion_embeddings.ipynb`](examples/aion_embeddings.ipynb) for usage.
 
+[AstroCLIP](https://huggingface.co/polymathic-ai/astroclip) (Polymathic AI,
+MIT) CLIP-aligns a 302M-parameter DINOv2 image encoder with a 43M-parameter
+spectrum transformer, also too large and dependency-heavy to reimplement
+natively; `astrolens.pretrained.astroclip` is a thin wrapper around the
+`astroclip` package instead. Install it per the
+[AstroCLIP README](https://github.com/PolymathicAI/AstroCLIP#installation)
+(`pip install astrolens[astroclip]` covers the plain dependencies; `dinov2`
+and `astroclip` itself both need separate `--no-deps` git installs):
+
+```python
+from astrolens.pretrained.astroclip import load_pretrained_astroclip
+
+model = load_pretrained_astroclip(device="cpu")
+embedding = model(image, input_type="image")
+```
+
+See [`astrolens/pretrained/astroclip.py`](astrolens/pretrained/astroclip.py)
+for usage.
+
 ## Examples
 
 See [`examples/README.md`](examples/README.md) for full details.
@@ -188,6 +207,11 @@ See [`examples/README.md`](examples/README.md) for full details.
   [`lsdb`](https://github.com/astronomy-commons/lsdb) cone search against
   the 61 TiB `hugging-science/mmu_legacysurvey_dr10_south_21` HATS catalog
   — the raw-flux catalog family AION-1 was itself pretrained on.
+- [`examples/astroclip_similarity_search.ipynb`](examples/astroclip_similarity_search.ipynb):
+  loads the released `polymathic-ai/astroclip` checkpoint and extracts frozen
+  image embeddings from real g,r,z Legacy Survey flux cutouts for in-modal
+  cosine-similarity nearest-neighbor retrieval, sidestepping the ~60 GB
+  dataset AstroCLIP's own cross-modal downstream tasks require.
 
 ## Resources
 
@@ -233,6 +257,17 @@ See [`examples/README.md`](examples/README.md) for full details.
   author={Parker, Liam and Lanusse, Francois and Shen, Jeff and Liu, Ollie and Hehir, Tom and Sarra, Leopoldo and Meyer, Lucas and Bowles, Micah and Wagner-Carena, Sebastian and Qu, Helen and Golkar, Siavash and Bietti, Alberto and Bourfoune, Hatim and Casserau, Nathan and Cornette, Pierre and Hirashima, Keiya and Krawezik, Geraud and Ohana, Ruben and Lourie, Nicholas and McCabe, Michael and Morel, Rudy and Mukhopadhyay, Payel and Pettee, Mariel and Regaldo-Saint Blancard, Bruno and Cho, Kyunghyun and Cranmer, Miles and Ho, Shirley},
   journal={arXiv preprint arXiv:2510.17960},
   year={2025}
+}
+
+@article{parker2024astroclip,
+  title={AstroCLIP: a cross-modal foundation model for galaxies},
+  author={Parker, Liam and Lanusse, Francois and Golkar, Siavash and Sarra, Leopoldo and Cranmer, Miles and Bietti, Alberto and Eickenberg, Michael and Krawezik, Geraud and McCabe, Michael and Morel, Rudy and Ohana, Ruben and Pettee, Mariel and R{\'e}galdo-Saint Blancard, Bruno and Cho, Kyunghyun and Ho, Shirley},
+  journal={Monthly Notices of the Royal Astronomical Society},
+  volume={531},
+  number={4},
+  pages={4990--5011},
+  year={2024},
+  doi={10.1093/mnras/stae1450}
 }
 
 ```
