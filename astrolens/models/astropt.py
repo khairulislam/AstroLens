@@ -84,27 +84,26 @@ class Block(nn.Module):
 
 
 def _spiral_perm(n: int) -> list:
-    """Raster indices of an n x n grid visited in spiral (outside-in) order.
-
-    Reordering patches this way, rather than left-to-right/top-to-bottom, is
-    part of the reference model's design (see Fig. 8 of
-    https://arxiv.org/abs/2401.08541): it changes which neighbours a causal
-    model has already seen at each step.
+    """Raster indices of an n x n grid in the reference model's spiral patch
+    order (Fig. 8 of https://arxiv.org/abs/2401.08541): centre-out, ending at
+    the top-left corner. Reproduces `GalaxyImageDataset._spiral`/`spiralise`
+    in Smith42/astropt bit-for-bit, since a pretrained checkpoint's position
+    embeddings and causal ordering are tied to that exact permutation.
     """
-    top, bottom, left, right = 0, n - 1, 0, n - 1
-    perm = []
-    while top <= bottom and left <= right:
-        perm.extend(top * n + c for c in range(left, right + 1))
-        top += 1
-        perm.extend(r * n + right for r in range(top, bottom + 1))
-        right -= 1
-        if top <= bottom:
-            perm.extend(bottom * n + c for c in range(right, left - 1, -1))
-            bottom -= 1
-        if left <= right:
-            perm.extend(r * n + left for r in range(bottom, top - 1, -1))
-            left += 1
-    return perm
+    grid = [[r * n + c for c in range(n)] for r in range(n)]
+    rings = [None]
+    while grid and grid[0]:
+        rings.extend(grid[0])
+        rings.extend(row[-1] for row in grid[1:])
+        rings.extend(grid[-1][:-1][::-1])
+        rings.extend(row[0] for row in grid[1:-1][::-1])
+        grid = [row[1:-1] for row in grid[1:-1]]
+    order = rings[1:]
+    rank = [0] * (n * n)
+    for k, idx in enumerate(order):
+        rank[idx] = k
+    rank = [abs(v - (n * n - 1)) for v in rank]
+    return sorted(range(n * n), key=lambda i: rank[i])
 
 
 class AstroPT(nn.Module):
@@ -159,9 +158,20 @@ class AstroPT(nn.Module):
 
         self.head = None
         if num_classes > 0:
-            self.head = nn.Sequential(nn.LayerNorm(dim), nn.Linear(dim, num_classes))
+            self.head = nn.Sequential(
+                nn.LayerNorm(dim),
+                nn.Linear(dim, dim // 2),
+                nn.ReLU(),
+                nn.Linear(dim // 2, num_classes),
+            )
 
     def patchify(self, img: torch.Tensor) -> torch.Tensor:
+        """Extract flattened patches, each normalized to zero mean and unit
+        variance independently (the reference model's `normalise` transform,
+        applied in `train.py`/`train_multimodal.py` ahead of both the encoder
+        and the reconstruction target): the pretrained encoder and decoder
+        are calibrated to this per-patch scale, not the raw pixel range.
+        """
         b, c, h, w = img.shape
         gh, gw = self.grid
         p = self.patch_size
@@ -169,7 +179,8 @@ class AstroPT(nn.Module):
         patches = patches.reshape(b, gh * gw, c * p * p)
         if self.spiral:
             patches = patches[:, self.patch_perm]
-        return patches
+        std, mean = torch.std_mean(patches, dim=-1, keepdim=True)
+        return (patches - mean) / (std + 1e-8)
 
     def forward_features(self, img: torch.Tensor, draw_from_centre: bool = False) -> torch.Tensor:
         """Causal per-patch embeddings, shape (batch, num_patches, dim).
@@ -182,19 +193,18 @@ class AstroPT(nn.Module):
         patches = self.patchify(img)
         pos = torch.arange(patches.shape[1], device=img.device)
         x = self.drop(self.encoder(patches) + self.pos_embed(pos))
-        centre = None
         mid = len(self.blocks) // 2
         for i, block in enumerate(self.blocks):
             x = block(x)
             if draw_from_centre and i == mid:
-                centre = x
-        return centre if draw_from_centre else self.ln_f(x)
+                return x
+        return self.ln_f(x)
 
     def forward(self, img: torch.Tensor) -> torch.Tensor:
-        x = self.forward_features(img)
         if self.head is not None:
+            x = self.forward_features(img, draw_from_centre=True)
             return self.head(x.mean(dim=1))
-        return self.decoder(x)
+        return self.decoder(self.forward_features(img))
 
     def loss(self, img: torch.Tensor) -> torch.Tensor:
         """Autoregressive next-patch prediction loss (Huber), for pretraining."""
@@ -203,14 +213,20 @@ class AstroPT(nn.Module):
         return F.huber_loss(pred[:, :-1], patches[:, 1:])
 
     def mark_only_lora_as_trainable(self) -> None:
-        """Freeze everything except LoRA adapters and the task head, for finetuning.
+        """Freeze the pretrained backbone, for finetuning.
 
         Mirrors the reference model's `finetune.py` recipe
-        (`lora.mark_only_lora_as_trainable(model)` plus an unfrozen task head).
+        (`lora.mark_only_lora_as_trainable(model)` plus an unfrozen task head),
+        with one addition: `encoder` also stays trainable. Unlike the
+        reference checkpoint's own patch encoder, ours can't be loaded from
+        it (see `load_pretrained_backbone`), so it starts randomly
+        initialized rather than pretrained and must be learned here too.
         Requires the model to have been constructed with `lora_r > 0`.
         """
         for name, param in self.named_parameters():
-            param.requires_grad = "lora_" in name or name.startswith("head.")
+            param.requires_grad = (
+                "lora_" in name or name.startswith("head.") or name.startswith("encoder.")
+            )
 
 
 @register_model
