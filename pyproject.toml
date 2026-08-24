@@ -17,6 +17,7 @@ dependencies = [
 
 [project.optional-dependencies]
 pretrained = ["huggingface_hub"]
+aion = ["polymathic-aion"]
 
 [project.urls]
 Homepage = "https://github.com/khairulislam/AstroLens"

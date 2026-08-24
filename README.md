@@ -140,6 +140,20 @@ Only the causal transformer body transfers; see
 [`astrolens/pretrained/astropt.py`](astrolens/pretrained/astropt.py) for the
 exact key mapping and why the patch encoder/decoder are excluded.
 
+[AION-1](https://huggingface.co/polymathic-ai/aion-base) (Polymathic AI,
+MIT) is a 39-modality omnimodal transformer, too large to reimplement
+natively here; `astrolens.pretrained.aion` is a thin wrapper around the
+`polymathic-aion` package instead (`pip install astrolens[aion]`):
+
+```python
+from astrolens.pretrained.aion import load_pretrained_aion
+
+model, codec_manager = load_pretrained_aion("aion-base", device="cpu")
+```
+
+See [`astrolens/pretrained/aion.py`](astrolens/pretrained/aion.py) and
+[`examples/aion_embeddings.ipynb`](examples/aion_embeddings.ipynb) for usage.
+
 ## Examples
 
 See [`examples/README.md`](examples/README.md) for full details.
@@ -165,6 +179,15 @@ See [`examples/README.md`](examples/README.md) for full details.
 - [`examples/astropt_anomaly_detection.ipynb`](examples/astropt_anomaly_detection.ipynb):
   uses the same frozen embeddings for outlier detection (Local Outlier Factor)
   on `Smith42/galaxies`.
+- [`examples/aion_embeddings.ipynb`](examples/aion_embeddings.ipynb):
+  loads the released `polymathic-ai/aion-base` checkpoint and extracts
+  frozen image embeddings from real Legacy Survey flux cutouts for
+  cosine-similarity nearest-neighbor retrieval.
+- [`examples/aion_lsdb_embeddings.ipynb`](examples/aion_lsdb_embeddings.ipynb):
+  the same AION-1 embedding search, sourcing flux cutouts via
+  [`lsdb`](https://github.com/astronomy-commons/lsdb) cone search against
+  the 61 TiB `hugging-science/mmu_legacysurvey_dr10_south_21` HATS catalog
+  — the raw-flux catalog family AION-1 was itself pretrained on.
 
 ## Resources
 
@@ -203,6 +226,13 @@ See [`examples/README.md`](examples/README.md) for full details.
   author={Smith, Michael J. and others},
   journal={arXiv preprint arXiv:2405.14930},
   year={2024}
+}
+
+@article{parker2025aion,
+  title={AION-1: Omnimodal Foundation Model for Astronomical Sciences},
+  author={Parker, Liam and Lanusse, Francois and Shen, Jeff and Liu, Ollie and Hehir, Tom and Sarra, Leopoldo and Meyer, Lucas and Bowles, Micah and Wagner-Carena, Sebastian and Qu, Helen and Golkar, Siavash and Bietti, Alberto and Bourfoune, Hatim and Casserau, Nathan and Cornette, Pierre and Hirashima, Keiya and Krawezik, Geraud and Ohana, Ruben and Lourie, Nicholas and McCabe, Michael and Morel, Rudy and Mukhopadhyay, Payel and Pettee, Mariel and Regaldo-Saint Blancard, Bruno and Cho, Kyunghyun and Cranmer, Miles and Ho, Shirley},
+  journal={arXiv preprint arXiv:2510.17960},
+  year={2025}
 }
 
 ```

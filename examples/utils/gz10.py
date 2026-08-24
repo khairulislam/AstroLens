@@ -45,6 +45,16 @@ class GZ10Dataset(Dataset):
         return (image, example["gz10_label"]) if self.with_label else image
 
 
+def load_examples(n: int, columns: list, filter_key: str = None, split: str = "train") -> list:
+    """Stream and materialize the first `n` examples of `columns` (mirrors `utils.galaxies.load_galaxies`)."""
+    from tqdm.auto import tqdm
+
+    dataset = load_dataset("UniverseTBD/mmu_gz10", split=split, streaming=True).select_columns(columns)
+    if filter_key is not None:
+        dataset = dataset.filter(lambda example: example[filter_key] is not None)
+    return list(tqdm(dataset.take(n), total=n, desc="streaming gz10", unit="ex"))
+
+
 def load_split_702010(random_state=0):
     """Load gz10 and stratified-split indices 70% train / 10% val / 20% test."""
     from sklearn.model_selection import train_test_split

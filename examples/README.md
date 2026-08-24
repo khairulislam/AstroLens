@@ -64,3 +64,29 @@ the highest-scoring outliers, cross-checked against `Smith42/galaxies`'
 `merging_merger_fraction` column — the same property the reference model's
 `scripts/euclid/downstream_tasks/anomaly_detection.py` cross-checks its own
 anomalies against.
+
+## `aion_embeddings.ipynb`
+
+Loads the released `polymathic-ai/aion-base` checkpoint via
+`astrolens.pretrained.aion.load_pretrained_aion` (a thin wrapper around the
+`polymathic-aion` package — AION-1's 39-modality tokenizer stack is too
+large to reimplement natively, see `astrolens/pretrained/aion.py`) and
+extracts frozen image-only embeddings. Cutout coordinates come from
+`UniverseTBD/mmu_gz10`, but the model input is real calibrated 4-band flux
+fetched per-coordinate from `legacysurvey.org/viewer/cutout.fits` (the same
+source AION's own tutorial uses), not gz10's RGB thumbnails. Ranks by
+cosine similarity to a query galaxy and inspects nearest neighbors, same
+layout as `astropt_similarity_search.ipynb`.
+
+## `aion_lsdb_embeddings.ipynb`
+
+Same AION-1 embedding + similarity search as `aion_embeddings.ipynb`, but
+sources flux cutouts via [`lsdb`](https://github.com/astronomy-commons/lsdb)
+(the SOTA framework for large partitioned/HATS astronomical catalogs)
+against `hugging-science/mmu_legacysurvey_dr10_south_21` — 123M objects,
+61 TiB, the raw-flux catalog family AION-1 was itself pretrained on. A cone
+search resolves only the few partition files (tens of MB each) covering a
+query region; see `utils/lsdb_legacysurvey.py` for two remote-read
+workarounds this environment needed (a dask scheduler bug and a
+partition-column read that has to happen locally after download rather
+than through lsdb's own remote reader).
