@@ -8,7 +8,9 @@ A unified library of vision models for astronomy.
 - [Astroformer](#astroformer)
 - [Linformer](#linformer)
 - [GCNN](#gcnn)
+- [Lensiformer](#lensiformer)
 - [AstroPT](#astropt)
+- [Pretrained weights](#pretrained-weights)
 - [Examples](#examples)
 - [Resources](#resources)
 - [Citations](#citations)
@@ -25,7 +27,6 @@ import astrolens
 astrolens.list_models()
 model = astrolens.create_model("astroformer", num_classes=10)
 ```
-
 
 ## Astroformer
 
@@ -97,6 +98,31 @@ import astrolens
 model = astrolens.create_model("gcnn_d16", num_classes=10)
 ```
 
+## Lensiformer
+
+<img src="images/lensiformer_distortion.png" alt="Physics-informed distortion preprocessing formula" width="450">
+
+<img src="images/lensiformer_lens_equation.png" alt="Gravitational lensing equation" width="600">
+
+This [NeurIPS 2023 ML4PS workshop paper](https://ml4physicalsciences.github.io/2023/files/NeurIPS_ML4PS_2023_214.pdf) (also called Lensformer) classifies dark-matter substructure (no substructure / CDM / axion) from strong gravitational lensing images. A physics-informed encoder, a Vision Transformer for Small Datasets, predicts a per-pixel scale field for a Singular Isothermal Sphere potential ansatz; the lens equation then warps the observed image into an estimated source-plane image, which a decoder cross-attends against the original to classify. Reported 90.3% accuracy on simulated HST-like lensing images, ahead of ResNet, Inception, and other ViT variants.
+
+```python
+import torch
+from astrolens.models.lensiformer import Lensiformer
+
+model = Lensiformer(img_size=64, in_chans=1, num_classes=3)
+img = torch.randn(2, 1, 64, 64)
+logits = model(img)
+```
+
+Or through the registry:
+
+```python
+import astrolens
+
+model = astrolens.create_model("lensiformer", num_classes=3)
+```
+
 ## AstroPT
 
 <img src="images/astropt.png" alt="AstroPT patchifying process" width="250">
@@ -125,9 +151,13 @@ model = astrolens.create_model("astropt", num_classes=10)
 `astrolens.pretrained` loads released checkpoints into the matching model,
 with the optional `huggingface_hub` dependency (`pip install astrolens[pretrained]`).
 
-| Model | Source | License | Checksum (sha256) |
+| Model | Source | Params | Modality |
 |---|---|---|---|
-| AstroPT | [`Smith42/astroPT`](https://huggingface.co/Smith42/astroPT), `models/fully_trained/0089M_params/030000_ckpt.pt` | MIT | `3b4450ee8b3ca94ad7b9d632e7998a044f6bbe1548d3ef9cbb2802cd93ad972c` |
+| AstroPT | [`Smith42/astroPT`](https://huggingface.co/Smith42/astroPT) | 89M | image |
+| AION-1 | [`polymathic-ai/aion-base`](https://huggingface.co/polymathic-ai/aion-base) | 300M | 39 modalities |
+| AstroCLIP | [`polymathic-ai/astroclip`](https://huggingface.co/polymathic-ai/astroclip) | 302M image + 43M spectrum | image + spectrum |
+
+### AstroPT
 
 ```python
 import torch
@@ -140,25 +170,12 @@ Only the causal transformer body transfers; see
 [`astrolens/pretrained/astropt.py`](astrolens/pretrained/astropt.py) for the
 exact key mapping and why the patch encoder/decoder are excluded.
 
-[AION-1](https://huggingface.co/polymathic-ai/aion-base) (Polymathic AI,
-MIT) is a 39-modality omnimodal transformer, too large to reimplement
-natively here; `astrolens.pretrained.aion` is a thin wrapper around the
-`polymathic-aion` package instead (`pip install astrolens[aion]`):
+### AstroCLIP
 
-```python
-from astrolens.pretrained.aion import load_pretrained_aion
-
-model, codec_manager = load_pretrained_aion("aion-base", device="cpu")
-```
-
-See [`astrolens/pretrained/aion.py`](astrolens/pretrained/aion.py) and
-[`examples/aion_embeddings.ipynb`](examples/aion_embeddings.ipynb) for usage.
-
-[AstroCLIP](https://huggingface.co/polymathic-ai/astroclip) (Polymathic AI,
-MIT) CLIP-aligns a 302M-parameter DINOv2 image encoder with a 43M-parameter
-spectrum transformer, also too large and dependency-heavy to reimplement
-natively; `astrolens.pretrained.astroclip` is a thin wrapper around the
-`astroclip` package instead. Install it per the
+[AstroCLIP](https://huggingface.co/polymathic-ai/astroclip) CLIP-aligns a
+DINOv2 image encoder with a spectrum transformer, also too large and
+dependency-heavy to reimplement natively; `astrolens.pretrained.astroclip`
+is a thin wrapper around the `astroclip` package instead. Install it per the
 [AstroCLIP README](https://github.com/PolymathicAI/AstroCLIP#installation)
 (`pip install astrolens[astroclip]` covers the plain dependencies; `dinov2`
 and `astroclip` itself both need separate `--no-deps` git installs):
@@ -172,6 +189,23 @@ embedding = model(image, input_type="image")
 
 See [`astrolens/pretrained/astroclip.py`](astrolens/pretrained/astroclip.py)
 for usage.
+
+### AION-1
+
+[AION-1](https://huggingface.co/polymathic-ai/aion-base) is too large to
+reimplement natively here; `astrolens.pretrained.aion` is a thin wrapper
+around the `polymathic-aion` package instead (`pip install astrolens[aion]`):
+
+```python
+from astrolens.pretrained.aion import load_pretrained_aion
+
+model, codec_manager = load_pretrained_aion("aion-base", device="cpu")
+```
+
+See [`astrolens/pretrained/aion.py`](astrolens/pretrained/aion.py) and
+[`examples/aion_embeddings.ipynb`](examples/aion_embeddings.ipynb) for usage.
+
+Later [this paper](https://openreview.net/pdf?id=xRD5qFxcdW) & [Code](https://github.com/MaxRonce/foundation-models-benchmark.git) benchmarked these multimodal models for unsupervised discovery in large multimodal astrophysical datasets.
 
 ## Examples
 
@@ -205,7 +239,7 @@ See [`examples/README.md`](examples/README.md) for full details.
 - [`examples/aion_lsdb_embeddings.ipynb`](examples/aion_lsdb_embeddings.ipynb):
   the same AION-1 embedding search, sourcing flux cutouts via
   [`lsdb`](https://github.com/astronomy-commons/lsdb) cone search against
-  the 61 TiB `hugging-science/mmu_legacysurvey_dr10_south_21` HATS catalog
+  the 61 TB `hugging-science/mmu_legacysurvey_dr10_south_21` HATS catalog
   — the raw-flux catalog family AION-1 was itself pretrained on.
 - [`examples/astroclip_similarity_search.ipynb`](examples/astroclip_similarity_search.ipynb):
   loads the released `polymathic-ai/astroclip` checkpoint and extracts frozen
@@ -245,6 +279,13 @@ See [`examples/README.md`](examples/README.md) for full details.
   primaryClass={astro-ph.GA}
 }
 
+@inproceedings{veloso2023lensformer,
+  title={Lensformer: A Physics-Informed Vision Transformer for Gravitational Lensing},
+  author={Vel{\^o}so, Lucas J. and Toomey, Michael W. and Gleyzer, Sergei},
+  booktitle={Machine Learning and the Physical Sciences Workshop, NeurIPS},
+  year={2023}
+}
+
 @article{smith2024astropt,
   title={AstroPT: Scaling Large Observation Models for Astronomy},
   author={Smith, Michael J. and others},
@@ -269,5 +310,4 @@ See [`examples/README.md`](examples/README.md) for full details.
   year={2024},
   doi={10.1093/mnras/stae1450}
 }
-
 ```
