@@ -111,7 +111,8 @@ class LSABlock(nn.Module):
 
     def __init__(self, dim: int, num_heads: int, mlp_ratio: float = 4.0, dropout: float = 0.1):
         super().__init__()
-        self.norm1 = nn.LayerNorm(dim)
+        self.norm_kv = nn.LayerNorm(dim)
+        self.norm_q = nn.LayerNorm(dim)
         self.attn = LocalitySelfAttention(dim, num_heads, dropout)
         self.norm2 = nn.LayerNorm(dim)
         self.mlp = nn.Sequential(
@@ -123,8 +124,11 @@ class LSABlock(nn.Module):
         )
 
     def forward(self, key: torch.Tensor, query: torch.Tensor = None, value: torch.Tensor = None) -> torch.Tensor:
-        residual = key if query is None else query
-        x = residual + self.attn(self.norm1(key), query, value)
+        q_src = key if query is None else query
+        normed_key = self.norm_kv(key)
+        normed_query = self.norm_q(q_src)
+        normed_value = normed_key if value is None else self.norm_kv(value)
+        x = q_src + self.attn(normed_key, normed_query, normed_value)
         x = x + self.mlp(self.norm2(x))
         return x
 
@@ -132,8 +136,13 @@ class LSABlock(nn.Module):
 class PhysicsInformedEncoder(nn.Module):
     """Predicts a per-patch scale field k(x, y) for the Singular Isothermal
     Sphere ansatz Psi(x, y) = k(x, y) * sqrt(x^2 + y^2) with a ViTSD, then
-    solves the (dimensionless) lens equation S = I - grad(Psi(I)) to warp the
-    observed image into an estimate of the unlensed source.
+    solves the lens equation S = I - grad(Psi(I)) to warp the observed image
+    into an estimate of the unlensed source.
+
+    Coordinates are angular (arcsec), following the reference implementation's
+    HST-like `pixel_scale` and `k` range — `k(x, y)` is then directly an
+    Einstein-radius-like deflection magnitude in arcsec, not a dimensionless
+    fraction of the image, so it carries over to any `img_size` unchanged.
 
     grad(Psi) is approximated as k(x, y) * grad(Psi_SIS(x, y)) rather than
     the full product-rule expansion, treating k as slowly varying relative to
@@ -152,6 +161,7 @@ class PhysicsInformedEncoder(nn.Module):
         dropout: float,
         k_min: float,
         k_max: float,
+        pixel_scale: float,
     ):
         super().__init__()
         self.tokenizer = ShiftedPatchTokenizer(img_size, patch_size, in_chans, embed_dim)
@@ -160,14 +170,17 @@ class PhysicsInformedEncoder(nn.Module):
         self.k_head = nn.Linear(embed_dim, 1)
         self.k_min, self.k_max = k_min, k_max
 
-        lin = torch.linspace(-1, 1, img_size)
+        half_width = img_size * pixel_scale / 2
+        self.half_width = half_width
+        lin = torch.linspace(-half_width, half_width, img_size)
         yy, xx = torch.meshgrid(lin, lin, indexing="ij")
         r = torch.sqrt(xx**2 + yy**2).clamp_min(1e-3)
         self.register_buffer("coords", torch.stack((xx, yy), dim=-1), persistent=False)
         self.register_buffer("sis_unit_deflection", torch.stack((xx / r, yy / r), dim=-1), persistent=False)
 
     def forward(self, image: torch.Tensor) -> torch.Tensor:
-        """Returns the source-plane sampling grid S = I - grad(Psi(I))."""
+        """Returns the source-plane sampling grid S = I - grad(Psi(I)),
+        normalized to [-1, 1] for `F.grid_sample`."""
         tokens = self.tokenizer(image)
         for block in self.blocks:
             tokens = block(tokens)
@@ -178,7 +191,8 @@ class PhysicsInformedEncoder(nn.Module):
         k = self.k_min + (self.k_max - self.k_min) * k.squeeze(1)
 
         deflection = k.unsqueeze(-1) * self.sis_unit_deflection
-        return (self.coords - deflection).clamp(-1, 1)
+        source_coords = self.coords - deflection
+        return (source_coords / self.half_width).clamp(-1, 1)
 
 
 class Lensiformer(nn.Module):
@@ -200,12 +214,13 @@ class Lensiformer(nn.Module):
         decoder_depth: int = 4,
         mlp_ratio: float = 4.0,
         dropout: float = 0.1,
-        k_min: float = 0.8,
+        k_min: float = 0.8,  # reference implementation's Einstein-radius-like bounds, in arcsec
         k_max: float = 1.2,
+        pixel_scale: float = 0.101,  # reference implementation's HST-like arcsec/pixel scale
     ):
         super().__init__()
         self.encoder = PhysicsInformedEncoder(
-            img_size, patch_size, in_chans, embed_dim, num_heads, encoder_depth, dropout, k_min, k_max
+            img_size, patch_size, in_chans, embed_dim, num_heads, encoder_depth, dropout, k_min, k_max, pixel_scale
         )
         self.observed_tokenizer = ShiftedPatchTokenizer(img_size, patch_size, in_chans, embed_dim)
         self.source_tokenizer = ShiftedPatchTokenizer(img_size, patch_size, in_chans, embed_dim)

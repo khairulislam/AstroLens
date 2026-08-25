@@ -27,6 +27,18 @@ projection of the model's invariant embedding, adapted from the reference
 implementation's `onepixelattack.py` and `latent_space_analysis.py`. Requires
 running `gcnn_training.ipynb` first.
 
+## `lensiformer_training.ipynb`
+
+Trains `Lensiformer` on the ML4SCI "Common Test I" strong-lensing dark-matter
+substructure benchmark (no substructure / CDM / axion, 150x150
+single-channel), subsampled to 3,000/750 images per class for a tutorial-scale
+run. The reference dataset's own Google Drive links are dead; this loads a
+verified re-upload from Hugging Face — see `utils/deeplense.py`. The
+physics-informed encoder's `k_min`/`k_max`/`pixel_scale` follow the reference
+implementation's HST-like arcsec/pixel scale and Einstein-radius-like
+deflection bounds directly, and the notebook visualizes the model's own
+lens-equation source reconstruction alongside the observed images.
+
 ## `astropt_pretraining.ipynb`
 
 Self-supervised pretraining of `astropt` from scratch on

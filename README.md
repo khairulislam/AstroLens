@@ -168,19 +168,10 @@ from astrolens.pretrained.astropt import load_pretrained_astropt
 model = load_pretrained_astropt(img_size=224, device=torch.device("cpu"), num_classes=10)
 ```
 
-Only the causal transformer body transfers; see
-[`astrolens/pretrained/astropt.py`](astrolens/pretrained/astropt.py) for the
-exact key mapping and why the patch encoder/decoder are excluded.
-
 ### AstroCLIP
 
-[AstroCLIP](https://huggingface.co/polymathic-ai/astroclip) CLIP-aligns a
-DINOv2 image encoder with a spectrum transformer, also too large and
-dependency-heavy to reimplement natively; `astrolens.pretrained.astroclip`
-is a thin wrapper around the `astroclip` package instead. Install it per the
-[AstroCLIP README](https://github.com/PolymathicAI/AstroCLIP#installation)
-(`pip install astrolens[astroclip]` covers the plain dependencies; `dinov2`
-and `astroclip` itself both need separate `--no-deps` git installs):
+Install per the [AstroCLIP README](https://github.com/PolymathicAI/AstroCLIP#installation)
+(`pip install astrolens[astroclip]`, plus separate `--no-deps` installs for `dinov2` and `astroclip`):
 
 ```python
 from astrolens.pretrained.astroclip import load_pretrained_astroclip
@@ -189,23 +180,13 @@ model = load_pretrained_astroclip(device="cpu")
 embedding = model(image, input_type="image")
 ```
 
-See [`astrolens/pretrained/astroclip.py`](astrolens/pretrained/astroclip.py)
-for usage.
-
 ### AION-1
-
-[AION-1](https://huggingface.co/polymathic-ai/aion-base) is too large to
-reimplement natively here; `astrolens.pretrained.aion` is a thin wrapper
-around the `polymathic-aion` package instead (`pip install astrolens[aion]`):
 
 ```python
 from astrolens.pretrained.aion import load_pretrained_aion
 
 model, codec_manager = load_pretrained_aion("aion-base", device="cpu")
 ```
-
-See [`astrolens/pretrained/aion.py`](astrolens/pretrained/aion.py) and
-[`examples/aion_embeddings.ipynb`](examples/aion_embeddings.ipynb) for usage.
 
 Later [this paper](https://openreview.net/pdf?id=xRD5qFxcdW) & [Code](https://github.com/MaxRonce/foundation-models-benchmark.git) benchmarked these multimodal models for unsupervised discovery in large multimodal astrophysical datasets.
 
@@ -245,8 +226,7 @@ See [`examples/README.md`](examples/README.md) for full details.
 - [`examples/astroclip_similarity_search.ipynb`](examples/astroclip_similarity_search.ipynb):
   loads the released `polymathic-ai/astroclip` checkpoint and extracts frozen
   image embeddings from real g,r,z Legacy Survey flux cutouts for in-modal
-  cosine-similarity nearest-neighbor retrieval, sidestepping the ~60 GB
-  dataset AstroCLIP's own cross-modal downstream tasks require.
+  cosine-similarity nearest-neighbor retrieval.
 
 ### Anomaly detection
 
