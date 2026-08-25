@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+title: "AstroLens: A unified library of vision models for astronomy"
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - given-names: "Md. Khairul"
+    family-names: Islam
+    affiliation: University of Virginia
+repository-code: "https://github.com/khairulislam/AstroLens"
+url: "https://github.com/khairulislam/AstroLens"
+abstract: >-
+  AstroLens collects vision architectures and foundation models
+  for astronomy under a single registry and a common PyTorch
+  interface, covering galaxy morphology classification, strong
+  gravitational lensing, and multimodal representation learning.
+keywords:
+  - astronomy
+  - astrophysics
+  - deep-learning
+  - computer-vision
+  - pytorch
+  - foundation-models
+  - galaxy-morphology
+  - gravitational-lensing
+license: MIT
+version: v1.0.0
+doi: 10.5281/zenodo.22088930
+date-released: "2026-08-24"

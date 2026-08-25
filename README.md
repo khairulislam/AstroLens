@@ -1,6 +1,9 @@
-# AstroLens
+# AstroLens - Unified Vision Library for Astronomy
 
-A unified library of vision models for astronomy.
+A unified library of vision models for astronomy: galaxy morphology
+classification, strong gravitational lensing, and multimodal representation
+learning, each a self-contained implementation behind one registry and a common
+PyTorch interface, with pretrained weights where available.
 
 ## Table of Contents
 
@@ -247,6 +250,23 @@ See [`examples/README.md`](examples/README.md) for full details.
 * [lucidrains/vit-pytorch](https://github.com/lucidrains/vit-pytorch): Implementation of Vision Transformer, a simple way to achieve SOTA in vision.
 
 ## Citations
+
+If you find this library useful in your research, please consider citing it:
+
+```
+@software{md_khairul_islam_2026_22088930,
+  author       = {Md. Khairul Islam},
+  title        = {khairulislam/AstroLens: v1.0.0},
+  month        = aug,
+  year         = 2026,
+  publisher    = {Zenodo},
+  version      = {v1.0.0},
+  doi          = {10.5281/zenodo.22088930},
+  url          = {https://doi.org/10.5281/zenodo.22088930},
+}
+```
+
+And the original works behind the included models:
 
 ```
 @article{dagli2023astroformer,
