@@ -100,7 +100,9 @@ model = astrolens.create_model("gcnn_d16", num_classes=10)
 
 ## Lensiformer
 
-<img src="images/lensiformer_distortion.png" alt="Physics-informed distortion preprocessing formula" width="450">
+<img src="images/gravitational lensing.png" alt="Gravitational Lensing" width="500">
+
+<img src="images/lensiformer_distortion.png" alt="Physics-informed distortion preprocessing formula" width="350">
 
 <img src="images/lensiformer_lens_equation.png" alt="Gravitational lensing equation" width="600">
 
@@ -211,27 +213,26 @@ Later [this paper](https://openreview.net/pdf?id=xRD5qFxcdW) & [Code](https://gi
 
 See [`examples/README.md`](examples/README.md) for full details.
 
+### Training
+
 - [`examples/linformer_training.ipynb`](examples/linformer_training.ipynb):
   trains `Linformer` for Galaxy Zoo 10 morphology classification on
   [`UniverseTBD/mmu_gz10`](https://huggingface.co/datasets/UniverseTBD/mmu_gz10).
 - [`examples/gcnn_training.ipynb`](examples/gcnn_training.ipynb):
   trains the group-equivariant `gcnn_d4` on the same dataset and saves a
   checkpoint for `gcnn_analysis.ipynb`.
-- [`examples/gcnn_analysis.ipynb`](examples/gcnn_analysis.ipynb):
-  probes the trained GCNN with a one-pixel adversarial attack and a
-  latent-space visualization of its learned embeddings.
 - [`examples/astropt_pretraining.ipynb`](examples/astropt_pretraining.ipynb):
   pretrains `AstroPT` from scratch with the autoregressive next-patch
   objective on [`Smith42/galaxies`](https://huggingface.co/datasets/Smith42/galaxies).
 - [`examples/astropt_finetuning.ipynb`](examples/astropt_finetuning.ipynb):
   loads a released `Smith42/astroPT` checkpoint and LoRA-finetunes a
   classification head on `UniverseTBD/mmu_gz10`.
+
+### Similarity search
+
 - [`examples/astropt_similarity_search.ipynb`](examples/astropt_similarity_search.ipynb):
-  uses the same checkpoint as a frozen feature extractor for cosine-similarity
-  nearest-neighbor retrieval on `Smith42/galaxies`.
-- [`examples/astropt_anomaly_detection.ipynb`](examples/astropt_anomaly_detection.ipynb):
-  uses the same frozen embeddings for outlier detection (Local Outlier Factor)
-  on `Smith42/galaxies`.
+  uses the finetuned `AstroPT` checkpoint as a frozen feature extractor for
+  cosine-similarity nearest-neighbor retrieval on `Smith42/galaxies`.
 - [`examples/aion_embeddings.ipynb`](examples/aion_embeddings.ipynb):
   loads the released `polymathic-ai/aion-base` checkpoint and extracts
   frozen image embeddings from real Legacy Survey flux cutouts for
@@ -246,6 +247,18 @@ See [`examples/README.md`](examples/README.md) for full details.
   image embeddings from real g,r,z Legacy Survey flux cutouts for in-modal
   cosine-similarity nearest-neighbor retrieval, sidestepping the ~60 GB
   dataset AstroCLIP's own cross-modal downstream tasks require.
+
+### Anomaly detection
+
+- [`examples/astropt_anomaly_detection.ipynb`](examples/astropt_anomaly_detection.ipynb):
+  uses the same frozen `AstroPT` embeddings for outlier detection (Local
+  Outlier Factor) on `Smith42/galaxies`.
+
+### Interpretability
+
+- [`examples/gcnn_analysis.ipynb`](examples/gcnn_analysis.ipynb):
+  probes the trained GCNN with a one-pixel adversarial attack and a
+  latent-space visualization of its learned embeddings.
 
 ## Resources
 
