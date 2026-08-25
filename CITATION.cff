@@ -26,3 +26,7 @@ license: MIT
 version: v1.0.0
 doi: 10.5281/zenodo.22088930
 date-released: "2026-08-24"
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.22088929
+    description: "This DOI represents all versions and will always resolve to the latest one."

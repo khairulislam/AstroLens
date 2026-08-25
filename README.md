@@ -5,6 +5,19 @@ classification, strong gravitational lensing, and multimodal representation
 learning, each a self-contained implementation behind one registry and a common
 PyTorch interface, with pretrained weights where available.
 
+```bibtex
+@software{md_khairul_islam_2026_22088930,
+  author       = {Md. Khairul Islam},
+  title        = {AstroLens: A unified library of vision models for astronomy},
+  month        = aug,
+  year         = 2026,
+  publisher    = {Zenodo},
+  version      = {v1.0.0},
+  doi          = {10.5281/zenodo.22088929},
+  url          = {https://doi.org/10.5281/zenodo.22088930}
+}
+```
+
 ## Table of Contents
 
 - [Usage](#usage)

@@ -1,0 +1,23 @@
+{
+  "title": "AstroLens: A unified library of vision models for astronomy",
+  "description": "AstroLens collects vision architectures and foundation models for astronomy under a single registry and a common PyTorch interface, covering galaxy morphology classification, strong gravitational lensing, and multimodal representation learning.",
+  "creators": [
+    {
+      "name": "Islam, Md. Khairul",
+      "affiliation": "University of Virginia"
+    }
+  ],
+  "keywords": [
+    "astronomy",
+    "astrophysics",
+    "deep-learning",
+    "computer-vision",
+    "pytorch",
+    "foundation-models",
+    "galaxy-morphology",
+    "gravitational-lensing"
+  ],
+  "license": "MIT",
+  "upload_type": "software",
+  "access_right": "open"
+}
